@@ -5,86 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Red Light Green Light</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-    }
-    .panel {
-      background: #020617;
-      padding: 20px;
-      border-radius: 14px;
-      width: 380px;
-      max-width: 95vw;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    }
-    h1 { text-align: center; margin-top: 0; }
-
-    .section { margin-bottom: 16px; }
-
-    label { font-size: 0.85rem; color: #cbd5f5; }
-
-    .lights {
-      display: flex;
-      justify-content: space-around;
-      margin: 18px 0 10px;
-    }
-    .light {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: #1f2937;
-      opacity: 0.25;
-      transition: background 0.3s, opacity 0.3s, box-shadow 0.3s;
-    }
-    .light.red.active {
-      background: #ef4444;
-      opacity: 1;
-      box-shadow: 0 0 25px rgba(239,68,68,0.8);
-    }
-    .light.green.active {
-      background: #22c55e;
-      opacity: 1;
-      box-shadow: 0 0 25px rgba(34,197,94,0.8);
-    }
-    .light.amber.active {
-      background: #f59e0b;
-      opacity: 1;
-      box-shadow: 0 0 25px rgba(245,158,11,0.9);
-    }
-
-    #message {
-      text-align: center;
-      min-height: 48px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 999px;
-      border: none;
-      background: #1d4ed8;
-      color: white;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button.secondary { background: #374151; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
-    .row label { display: block; }
-
-    .hint { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
-
-    .stopwatch { text-align: center; font-size: 0.9rem; color: #9ca3af; }
+    body { font-family: system-ui, sans-serif; background:#0f172a; color:#e5e7eb; display:flex; justify-content:center; padding:20px; }
+    .panel { background:#020617; padding:20px; border-radius:14px; width:380px; max-width:95vw; box-shadow:0 20px 40px rgba(0,0,0,.6); }
+    h1 { text-align:center; margin-top:0; }
+    .section { margin-bottom:16px; }
+    label { font-size:.85rem; color:#cbd5f5; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .lights { display:flex; justify-content:space-around; margin:18px 0 10px; }
+    .light { width:80px; height:80px; border-radius:50%; background:#1f2937; opacity:.25; transition:.25s; }
+    .light.red.active { background:#ef4444; opacity:1; box-shadow:0 0 25px rgba(239,68,68,.8); }
+    .light.green.active { background:#22c55e; opacity:1; box-shadow:0 0 25px rgba(34,197,94,.8); }
+    .light.amber.active { background:#f59e0b; opacity:1; box-shadow:0 0 25px rgba(245,158,11,.9); }
+    #message { text-align:center; min-height:48px; font-size:1.1rem; font-weight:600; margin-bottom:10px; }
+    button { width:100%; padding:12px; border-radius:999px; border:none; background:#1d4ed8; color:white; font-size:1rem; font-weight:600; cursor:pointer; margin-top:10px; }
+    button.secondary { background:#374151; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .hint { font-size:.75rem; color:#94a3b8; margin-top:4px; }
+    .stopwatch { text-align:center; font-size:.9rem; color:#9ca3af; }
   </style>
 </head>
 <body>
@@ -135,54 +72,31 @@
   </div>
 
   <div id="message"></div>
-
   <div class="stopwatch" id="stopwatch">00:00</div>
 
   <button id="startBtn">Start</button>
-  <button id="readyBtn" class="secondary" disabled>Ready to Cum</button>
+  <button id="readyBtn" class="secondary" disabled>Ready Mode</button>
   <button id="resetBtn" class="secondary">Reset</button>
 </div>
 
 <script>
-let phase = null; // red | green | amber | rtc
+// -------------------- STATE --------------------
+let phase = null;           // red | green | amber | rtc
 let timer = null;
 let timeLeft = 0;
 let stopwatchTimer = null;
 let secondsElapsed = 0;
 let rtcActive = false;
+let rtcElapsed = 0;          // seconds elapsed in current RTC round
 
-const authorityRed = [
-  "You need more discipline",
-  "I've decided to punish you",
-  "You've been naughty",
-  "Hands off. Control yourself",
-  "You know better than this"
-];
+// -------------------- TEXT (PLACEHOLDERS) --------------------
+// NOTE: Replace these with your own custom phrases.
+const authorityRed = ["STOP", "HOLD", "WAIT", "CONTROL", "DISCIPLINE"]; 
+const encouragingRed = ["PAUSE", "STEADY", "BREATHE", "NOT YET", "CALM"]; 
+const greenTexts = ["GO", "MOVE", "CONTINUE", "KEEP GOING", "NOW"]; 
+const punishments = ["PENALTY", "CORRECTION", "RESET POSTURE", "STILLNESS", "FOCUS"]; 
 
-const encouragingRed = [
-  "Hold it right there",
-  "Stay still for me",
-  "Easy now, don't rush",
-  "Wait. Breathe",
-  "Not yet"
-];
-
-const greenTexts = [
-  "Jerk it",
-  "Don't stop moving",
-  "Up and down",
-  "Keep going",
-  "Nice and steady"
-];
-
-const punishments = [
-  "Hump the air",
-  "Spread your legs",
-  "Spread your cheeks",
-  "Hands behind your head",
-  "Show your desperation"
-];
-
+// -------------------- UTILS --------------------
 function beep(type) {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
@@ -191,8 +105,7 @@ function beep(type) {
   osc.type = 'sine';
   osc.frequency.value = type === 'green' ? 700 : type === 'amber' ? 520 : 360;
   gain.gain.setValueAtTime(0.25, ctx.currentTime);
-  osc.start();
-  osc.stop(ctx.currentTime + 0.25);
+  osc.start(); osc.stop(ctx.currentTime + 0.25);
 }
 
 function pickChecked(cls) {
@@ -204,32 +117,34 @@ function clearLights() {
   ['red','green','amber'].forEach(id => document.getElementById(id).classList.remove('active'));
 }
 
-function currentPersona() {
+function persona() {
   return document.querySelector('input[name="persona"]:checked').value;
 }
 
 function redMessage() {
-  return currentPersona() === 'authority'
-    ? authorityRed[Math.floor(Math.random()*authorityRed.length)]
-    : encouragingRed[Math.floor(Math.random()*encouragingRed.length)];
+  const src = persona() === 'authority' ? authorityRed : encouragingRed;
+  return src[Math.floor(Math.random()*src.length)];
 }
 
+// -------------------- PHASE CONTROL --------------------
 function setPhase(p, duration) {
   phase = p;
   clearLights();
   document.getElementById(p).classList.add('active');
   beep(p);
 
-  if (p === 'red') document.getElementById('message').textContent = redMessage();
-  if (p === 'green') document.getElementById('message').textContent = greenTexts[Math.floor(Math.random()*greenTexts.length)];
-  if (p === 'amber') document.getElementById('message').textContent = punishments[Math.floor(Math.random()*punishments.length)];
+  if (p === 'red') message.textContent = redMessage();
+  if (p === 'green') message.textContent = greenTexts[Math.floor(Math.random()*greenTexts.length)];
+  if (p === 'amber') message.textContent = punishments[Math.floor(Math.random()*punishments.length)];
 
   timeLeft = duration;
 }
 
 function nextPhase() {
+  if (rtcActive) return; // normal loop disabled during RTC
+
   if (phase === 'red') {
-    if (document.getElementById('punishToggle').checked && Math.random() < 0.1) {
+    if (punishToggle.checked && Math.random() < 0.1) {
       setPhase('amber', 10);
       return;
     }
@@ -246,62 +161,73 @@ function tick() {
   if (timeLeft <= 0) nextPhase();
 }
 
+// -------------------- STOPWATCH --------------------
 function startStopwatch() {
   stopwatchTimer = setInterval(() => {
     secondsElapsed++;
     const m = String(Math.floor(secondsElapsed/60)).padStart(2,'0');
     const s = String(secondsElapsed%60).padStart(2,'0');
-    document.getElementById('stopwatch').textContent = `${m}:${s}`;
-  },1000);
+    stopwatch.textContent = `${m}:${s}`;
+  }, 1000);
 }
 
+// -------------------- CONTROLS --------------------
 function start() {
   if (timer) return;
   setPhase('red', pickChecked('redDur'));
-  timer = setInterval(tick,1000);
+  timer = setInterval(tick, 1000);
   startStopwatch();
-  document.getElementById('readyBtn').disabled = false;
+  readyBtn.disabled = false;
 }
 
 function reset() {
-  clearInterval(timer);
-  clearInterval(stopwatchTimer);
-  timer = null;
-  stopwatchTimer = null;
-  secondsElapsed = 0;
-  rtcActive = false;
-  phase = null;
-  clearLights();
-  document.getElementById('message').textContent = '';
-  document.getElementById('stopwatch').textContent = '00:00';
-  document.getElementById('readyBtn').disabled = true;
+  clearInterval(timer); clearInterval(stopwatchTimer);
+  timer = stopwatchTimer = null;
+  secondsElapsed = 0; rtcActive = false; rtcElapsed = 0; phase = null;
+  clearLights(); message.textContent = '';
+  stopwatch.textContent = '00:00'; readyBtn.disabled = true;
 }
 
-function readyToCum() {
+// -------------------- READY MODE (COMMITMENT) --------------------
+function readyMode() {
   if (rtcActive) return;
   rtcActive = true;
   clearInterval(timer);
+  rtcElapsed = 0;
 
-  const rtcSequence = () => {
-    setPhase('green',15);
+  const rtcTick = () => {
+    // Short red (5s) then green (15s) cycles
+    setPhase('red', 5);
     setTimeout(() => {
-      if (Math.random() < 0.5) {
-        document.getElementById('message').textContent = 'Cum now';
-        clearLights();
-        document.getElementById('green').classList.add('active');
-        beep('green');
-      } else {
-        rtcSequence();
-      }
-    }, 15000);
+      setPhase('green', 15);
+    }, 5000);
+
+    rtcElapsed += 20; // 5 + 15
+
+    if (rtcElapsed >= 60) {
+      // End of 60s round: decide outcome
+      setTimeout(() => {
+        if (Math.random() < 0.5) {
+          // SUCCESS
+          message.textContent = 'NOW';
+          clearLights(); green.classList.add('active'); beep('green');
+        } else {
+          // DENIED: reset round
+          rtcElapsed = 0;
+          rtcTick();
+        }
+      }, 15000);
+    } else {
+      setTimeout(rtcTick, 20000);
+    }
   };
 
-  rtcSequence();
+  rtcTick();
 }
 
 startBtn.onclick = start;
 resetBtn.onclick = reset;
-readyBtn.onclick = readyToCum;
+readyBtn.onclick = readyMode;
 </script>
 </body>
 </html>

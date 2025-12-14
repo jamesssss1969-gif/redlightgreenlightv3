@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red Light Green Light</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .panel {
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 14px;
+      width: 380px;
+      max-width: 95vw;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h1 { text-align: center; margin: 0 0 10px; }
+    .section { margin-top: 14px; }
+    .lights {
+      display: flex;
+      justify-content: space-around;
+      margin: 18px 0 6px;
+    }
+    .light {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: #333;
+      opacity: 0.25;
+      transition: all 0.25s ease;
+    }
+    .light.red.active { background: #e53935; opacity: 1; }
+    .light.green.active { background: #43a047; opacity: 1; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    label { font-size: 14px; }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #2e2e2e;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button.primary { background: #3a3a3a; }
+    button.warn { background: #5a2a2a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg {
+      text-align: center;
+      min-height: 42px;
+      margin-top: 6px;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+    .pill {
+      background: #2b2b2b;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+    .divider { height: 1px; background: #2a2a2a; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Red Light Green Light</h1>
+
+    <div class="section">
+      <strong>Red durations (s)</strong>
+      <div class="row">
+        <label><input type="checkbox" class="redDur" value="5" checked>5</label>
+        <label><input type="checkbox" class="redDur" value="10" checked>10</label>
+        <label><input type="checkbox" class="redDur" value="15" checked>15</label>
+        <label><input type="checkbox" class="redDur" value="20">20</label>
+        <label><input type="checkbox" class="redDur" value="25">25</label>
+        <label><input type="checkbox" class="redDur" value="30">30</label>
+      </div>
+    </div>
+
+    <div class="section">
+      <strong>Green durations (s)</strong>
+      <div class="row">
+        <label><input type="checkbox" class="greenDur" value="5">5</label>
+        <label><input type="checkbox" class="greenDur" value="10" checked>10</label>
+        <label><input type="checkbox" class="greenDur" value="15" checked>15</label>
+        <label><input type="checkbox" class="greenDur" value="20">20</label>
+        <label><input type="checkbox" class="greenDur" value="25">25</label>
+        <label><input type="checkbox" class="greenDur" value="30">30</label>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="row">
+      <label class="pill"><input type="checkbox" id="punishToggle"> Punishments (10%)</label>
+      <label class="pill"><input type="checkbox" id="authorityToggle"> Authority reds</label>
+    </div>
+
+    <div class="lights">
+      <div id="red" class="light red"></div>
+      <div id="green" class="light green"></div>
+    </div>
+
+    <div id="message" class="msg"></div>
+
+    <div class="meta">
+      <div id="stopwatch" class="pill">00:00</div>
+      <div id="mode" class="pill">Normal</div>
+    </div>
+
+    <div class="section">
+      <button id="startBtn" class="primary">Start</button>
+      <button id="readyBtn" class="warn">Ready to Cum</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+<script>
+// -------------------- STATE --------------------
+let currentPhase = null; // 'red' | 'green'
+let timer = null;
+let phaseTimeLeft = 0;
+let running = false;
+let committed = false; // Ready-to-Cum commitment
+
+// stopwatch
+let swStart = null;
+let swTimer = null;
+
+// -------------------- MESSAGES --------------------
+const redBase = [
+  "No touching",
+  "Hands off",
+  "Don't you dare",
+  "Hold still",
+  "Control yourself",
+  "Behave"
+];
+
+const redAuthority = [
+  "You need more discipline",
+  "I've decided to punish you",
+  "You know better",
+  "Not yet",
+  "You haven't earned it"
+];
+
+const punishments = [
+  "Hump the air",
+  "Spread your legs",
+  "Spread your cheeks",
+  "Hands behind your back",
+  "Stay still"
+];
+
+const greenBase = [
+  "Jerk it",
+  "Don't stop moving",
+  "Up and down",
+  "Keep going",
+  "Faster"
+];
+
+// -------------------- AUDIO (BEEPS) --------------------
+function playBeep(type) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain).connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.value = type === 'red' ? 440 : 720;
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.18);
+}
+
+// -------------------- HELPERS --------------------
+function pickChecked(selector) {
+  return [...document.querySelectorAll(selector + ':checked')].map(cb => Number(cb.value));
+}
+
+function rand(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`;
+}
+
+// -------------------- PHASE LOGIC --------------------
+function pickDuration(phase) {
+  if (committed) {
+    // fixed pattern during Ready-to-Cum
+    return phase === 'red' ? 5 : 15;
+  }
+  const list = phase === 'red' ? pickChecked('.redDur') : pickChecked('.greenDur');
+  return list.length ? rand(list) : (phase === 'red' ? 5 : 10);
+}
+
+function pickMessage(phase) {
+  if (phase === 'red') {
+    // Authority chance
+    if (document.getElementById('authorityToggle').checked && Math.random() < 0.25) {
+      return rand(redAuthority);
+    }
+    // Punishment chance
+    if (document.getElementById('punishToggle').checked && Math.random() < 0.10) {
+      return rand(punishments);
+    }
+    return rand(redBase);
+  } else {
+    return rand(greenBase);
+  }
+}
+
+function setPhase(phase) {
+  currentPhase = phase;
+  document.getElementById('red').classList.toggle('active', phase === 'red');
+  document.getElementById('green').classList.toggle('active', phase === 'green');
+  document.getElementById('message').textContent = pickMessage(phase);
+  playBeep(phase);
+  phaseTimeLeft = pickDuration(phase);
+}
+
+function nextPhase() {
+  setPhase(currentPhase === 'red' ? 'green' : 'red');
+}
+
+// -------------------- LOOP --------------------
+function tick() {
+  phaseTimeLeft--;
+  if (phaseTimeLeft <= 0) nextPhase();
+}
+
+// -------------------- CONTROLS --------------------
+function start() {
+  if (running) return;
+  running = true;
+  committed = false;
+  document.getElementById('mode').textContent = 'Normal';
+  setPhase('red');
+  timer = setInterval(tick, 1000);
+  startStopwatch();
+}
+
+function readyToCum() {
+  if (!running || committed) return;
+  committed = true;
+  document.getElementById('mode').textContent = 'Ready to Cum';
+  // lock controls implicitly by ignoring changes
+  setPhase('red');
+  // End after exactly 2 minutes
+  setTimeout(() => {
+    document.getElementById('message').textContent = 'Cum now';
+    stopAll();
+  }, 120000);
+}
+
+function reset() {
+  stopAll();
+  document.getElementById('message').textContent = '';
+  document.getElementById('mode').textContent = 'Idle';
+}
+
+function stopAll() {
+  running = false;
+  committed = false;
+  clearInterval(timer);
+  timer = null;
+  stopStopwatch();
+  document.getElementById('red').classList.remove('active');
+  document.getElementById('green').classList.remove('active');
+}
+
+// -------------------- STOPWATCH --------------------
+function startStopwatch() {
+  swStart = Date.now();
+  swTimer = setInterval(() => {
+    document.getElementById('stopwatch').textContent = formatTime(Date.now() - swStart);
+  }, 500);
+}
+
+function stopStopwatch() {
+  clearInterval(swTimer);
+  swTimer = null;
+  document.getElementById('stopwatch').textContent = '00:00';
+}
+
+// -------------------- BINDINGS --------------------
+document.getElementById('startBtn').onclick = start;
+document.getElementById('readyBtn').onclick = readyToCum;
+document.getElementById('resetBtn').onclick = reset;
+</script>
+</body>
+</html>

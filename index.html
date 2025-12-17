@@ -24,7 +24,7 @@ body{
 }
 h1{text-align:center;margin-top:0}
 .section{margin-bottom:16px}
-label{font-size:.85rem;color:#cbd5f5}
+label{font-size:.9rem;color:#cbd5f5;display:flex;align-items:center;justify-content:space-between}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .lights{display:flex;justify-content:space-around;margin:18px 0 10px}
 .light{
@@ -34,6 +34,7 @@ label{font-size:.85rem;color:#cbd5f5}
 .light.red.active{background:#ef4444;opacity:1;box-shadow:0 0 25px rgba(239,68,68,.8)}
 .light.green.active{background:#22c55e;opacity:1;box-shadow:0 0 25px rgba(34,197,94,.8)}
 .light.amber.active{background:#f59e0b;opacity:1;box-shadow:0 0 25px rgba(245,158,11,.9)}
+.light.ready.active{background:#3b82f6;opacity:1;box-shadow:0 0 25px rgba(59,130,246,.8);}
 #message{text-align:center;min-height:48px;font-size:1.1rem;font-weight:600;margin-bottom:10px}
 .stopwatch{text-align:center;font-size:.9rem;color:#9ca3af}
 button{
@@ -54,6 +55,14 @@ button:disabled{opacity:.5;cursor:not-allowed}
 }
 .overlay .q{font-size:1.05rem;margin-bottom:14px}
 .overlay .btns{display:flex;gap:10px}
+input[type="checkbox"].toggle{
+  width:50px;height:26px;position:relative;-webkit-appearance:none;background:#374151;outline:none;border-radius:13px;transition:.3s;cursor:pointer;
+}
+input[type="checkbox"].toggle:checked{background:#1d4ed8;}
+input[type="checkbox"].toggle:before{
+  content:"";position:absolute;width:22px;height:22px;border-radius:50%;top:2px;left:2px;background:#fff;transition:.3s;
+}
+input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 </style>
 </head>
 
@@ -64,41 +73,33 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <div class="section">
 <label>Red durations (s)</label>
 <div class="row">
-<label><input type="checkbox" class="redDur" value="5" checked>5</label>
-<label><input type="checkbox" class="redDur" value="10" checked>10</label>
-<label><input type="checkbox" class="redDur" value="15">15</label>
-<label><input type="checkbox" class="redDur" value="20">20</label>
-<label><input type="checkbox" class="redDur" value="25">25</label>
-<label><input type="checkbox" class="redDur" value="30">30</label>
+<label>5 <input type="checkbox" class="redDur toggle" value="5" checked></label>
+<label>10 <input type="checkbox" class="redDur toggle" value="10" checked></label>
+<label>15 <input type="checkbox" class="redDur toggle" value="15"></label>
+<label>20 <input type="checkbox" class="redDur toggle" value="20"></label>
+<label>25 <input type="checkbox" class="redDur toggle" value="25"></label>
+<label>30 <input type="checkbox" class="redDur toggle" value="30"></label>
 </div>
 </div>
 
 <div class="section">
 <label>Green durations (s)</label>
 <div class="row">
-<label><input type="checkbox" class="greenDur" value="5">5</label>
-<label><input type="checkbox" class="greenDur" value="10" checked>10</label>
-<label><input type="checkbox" class="greenDur" value="15" checked>15</label>
-<label><input type="checkbox" class="greenDur" value="20">20</label>
-<label><input type="checkbox" class="greenDur" value="25">25</label>
-<label><input type="checkbox" class="greenDur" value="30">30</label>
+<label>5 <input type="checkbox" class="greenDur toggle" value="5"></label>
+<label>10 <input type="checkbox" class="greenDur toggle" value="10" checked></label>
+<label>15 <input type="checkbox" class="greenDur toggle" value="15" checked></label>
+<label>20 <input type="checkbox" class="greenDur toggle" value="20"></label>
+<label>25 <input type="checkbox" class="greenDur toggle" value="25"></label>
+<label>30 <input type="checkbox" class="greenDur toggle" value="30"></label>
 </div>
 </div>
 
 <div class="section">
-<label><input type="checkbox" id="punishToggle" checked> Enable punishments</label>
+<label>Enable punishments <input type="checkbox" id="punishToggle" class="toggle" checked></label>
 </div>
 
 <div class="section">
-<label><input type="checkbox" id="judgementToggle" checked> Enable Judgement Questions</label>
-</div>
-
-<div class="section">
-<label>Personality</label>
-<div class="row">
-<label><input type="radio" name="persona" value="authority" checked> Authority</label>
-<label><input type="radio" name="persona" value="encouraging"> Encouraging</label>
-</div>
+<label>Enable Judgement Questions <input type="checkbox" id="judgementToggle" class="toggle" checked></label>
 </div>
 
 <div class="lights">
@@ -126,33 +127,20 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <script>
-/* ========= AUDIO ========= */
+/* ===== AUDIO ===== */
 let audioCtx;
-function initAudio(){
-  if(!audioCtx){
-    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  }
-}
-function tone(freq,d=0.25,g=0.25){
-  initAudio();
-  const o=audioCtx.createOscillator();
-  const ga=audioCtx.createGain();
-  o.connect(ga).connect(audioCtx.destination);
-  o.frequency.value=freq;
-  ga.gain.value=g;
-  o.start();
-  o.stop(audioCtx.currentTime+d);
-}
+function initAudio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}}
+function tone(freq,d=0.25,g=0.25){const o=audioCtx.createOscillator();const ga=audioCtx.createGain();o.connect(ga).connect(audioCtx.destination);o.frequency.value=freq;ga.gain.value=g;o.start();o.stop(audioCtx.currentTime+d);}
 function beep(type){
   if(type==='green') tone(750);
   if(type==='red') tone(300);
   if(type==='amber') tone(520,0.35);
   if(type==='question'){tone(900,0.15);setTimeout(()=>tone(600,0.2),180);}
+  if(type==='cum'){tone(1200,0.2);setTimeout(()=>tone(1000,0.25),250);}
 }
 
-/* ========= TEXT (UNCHANGED) ========= */
+/* ===== TEXT ===== */
 const authorityRed=['Hands off your cock','No touching','Hands off','Discipline required','No you dont'];
-const encouragingRed=['Pause here','Take a breath','Not yet','Easy now','Wait'];
 const greenTexts=['Fuck youself','Jerk jerk jerk','Jerk that cock','Up and down, up and down','Jerk it'];
 const punishments=['Show your desperation','Fling your cock around','Hump the air','Present for inspection','Hips in the air'];
 
@@ -164,34 +152,39 @@ const judgementQuestions=[
 {q:'Do you like being watched?',yesPunish:0.6,noPunish:0.4}
 ];
 
-/* ========= CORE ========= */
-let phase=null,timer=null,stopwatchTimer=null,secondsElapsed=0;
-let rtcActive=false,rtcTimers=[],judgementArmed=false;
+/* ===== CORE LOGIC ===== */
+let phase=null,timer=null,stopwatchTimer=null,timeLeft=0,secondsElapsed=0;
+let rtcActive=false,rtcTimers=[],judgementArmed=false,lastJudgementTime=0;
 
-function pickChecked(cls){
-  const v=[...document.querySelectorAll(`.${cls}:checked`)].map(c=>+c.value);
-  return v.length?v[Math.floor(Math.random()*v.length)]:5;
-}
-function persona(){return document.querySelector('input[name="persona"]:checked').value;}
+function pickChecked(cls){const v=[...document.querySelectorAll(`.${cls}:checked`)].map(c=>+c.value);return v.length?v[Math.floor(Math.random()*v.length)]:5;}
 function clearLights(){['red','green','amber'].forEach(id=>document.getElementById(id).classList.remove('active'));}
 
 function setPhase(p,d){
   phase=p;clearLights();
   document.getElementById(p).classList.add('active');
   beep(p);
-  if(p==='red')message.textContent=(persona()==='authority'?authorityRed:encouragingRed)[Math.floor(Math.random()*authorityRed.length)];
-  if(p==='green')message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
-  if(p==='amber')message.textContent=punishments[Math.floor(Math.random()*punishments.length)];
+  if(p==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
+  if(p==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
+  if(p==='amber') message.textContent=punishments[Math.floor(Math.random()*punishments.length)];
   timeLeft=d;
 }
 
-let timeLeft=0;
 function tick(){timeLeft--;if(timeLeft<=0)nextPhase();}
 
+function maybeJudgement(){
+  if(!judgementToggle.checked || !judgementArmed) return false;
+  if(secondsElapsed - lastJudgementTime >= 120){ // every 2 minutes
+    triggerJudgement();
+    lastJudgementTime = secondsElapsed;
+    return true;
+  }
+  return false;
+}
+
 function nextPhase(){
-  if(judgementToggle.checked&&judgementArmed&&Math.random()<0.25){triggerJudgement();return;}
+  if(maybeJudgement()) return;
   if(phase==='red'){
-    if(punishToggle.checked&&Math.random()<0.1){setPhase('amber',10);return;}
+    if(punishToggle.checked && Math.random()<0.1){setPhase('amber',10);return;}
     setPhase('green',pickChecked('greenDur'));
   }else if(phase==='green'){setPhase('red',pickChecked('redDur'));}
   else if(phase==='amber'){setPhase('green',pickChecked('greenDur'));}
@@ -200,14 +193,12 @@ function nextPhase(){
 function startStopwatch(){
   stopwatchTimer=setInterval(()=>{
     secondsElapsed++;
-    stopwatch.textContent=
-      String(Math.floor(secondsElapsed/60)).padStart(2,'0')+':'+
-      String(secondsElapsed%60).padStart(2,'0');
-    if(secondsElapsed>120)judgementArmed=true;
+    stopwatch.textContent=String(Math.floor(secondsElapsed/60)).padStart(2,'0')+':'+String(secondsElapsed%60).padStart(2,'0');
+    if(secondsElapsed>120) judgementArmed=true;
   },1000);
 }
 
-/* ========= JUDGEMENT ========= */
+/* ===== JUDGEMENT ===== */
 function triggerJudgement(){
   clearInterval(timer);
   clearLights();
@@ -220,46 +211,46 @@ function triggerJudgement(){
 }
 function resolveJudgement(ans){
   overlay.style.display='none';
-  if(Math.random()<(ans==='yes'?overlay.dataset.yes:overlay.dataset.no)){
-    setPhase('amber',10);
-  }else setPhase('red',pickChecked('redDur'));
+  if(Math.random()<(ans==='yes'?overlay.dataset.yes:overlay.dataset.no)){setPhase('amber',10);}
+  else setPhase('red',pickChecked('redDur'));
   timer=setInterval(tick,1000);
 }
 
-/* ========= READY TO CUM MODE ========= */
+/* ===== READY TO CUM ===== */
 function clearRTC(){rtcTimers.forEach(t=>clearTimeout(t));rtcTimers=[];}
 function readyMode(){
   initAudio();
-  if(rtcActive)return;
+  if(rtcActive) return;
   rtcActive=true;
-  clearInterval(timer);
-  clearRTC();
+  clearInterval(timer); clearRTC();
   judgementArmed=false;
 
   const red=5,green=15;
+
   function rtcSet(p){
-    phase=p;clearLights();
-    document.getElementById(p).classList.add('active');
+    phase=p; clearLights();
+    if(rtcActive) document.getElementById(p).classList.add(p==='red'?'red':'green');
+    if(rtcActive) document.querySelector('.lights').classList.add('ready');
     beep(p);
-    if(p==='red')message.textContent=(persona()==='authority'?authorityRed:encouragingRed)[Math.floor(Math.random()*authorityRed.length)];
-    if(p==='green')message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
+    if(p==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
+    if(p==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
   }
 
   rtcSet('red');
   rtcTimers.push(setTimeout(function cycle(){
-    if(!rtcActive)return;
+    if(!rtcActive) return;
     rtcSet(phase==='red'?'green':'red');
     rtcTimers.push(setTimeout(cycle,(phase==='green'?green:red)*1000));
   },red*1000));
 
   rtcTimers.push(setTimeout(()=>{
-    clearRTC();clearLights();
+    clearRTC(); clearLights(); document.querySelector('.lights').classList.remove('ready');
     message.textContent='Verdict incoming...';
     rtcTimers.push(setTimeout(()=>{
       if(Math.random()<0.5){
         message.textContent='Cum now';
         document.getElementById('green').classList.add('active');
-        beep('green');
+        beep('cum');
       }else{
         message.textContent='Denied';
         beep('amber');
@@ -270,10 +261,10 @@ function readyMode(){
   },60000));
 }
 
-/* ========= EVENTS ========= */
+/* ===== EVENTS ===== */
 startBtn.onclick=()=>{
   initAudio();
-  if(timer)return;
+  if(timer) return;
   setPhase('red',pickChecked('redDur'));
   timer=setInterval(tick,1000);
   startStopwatch();
@@ -281,10 +272,10 @@ startBtn.onclick=()=>{
 };
 readyBtn.onclick=readyMode;
 resetBtn.onclick=()=>{
-  clearInterval(timer);clearInterval(stopwatchTimer);clearRTC();
-  timer=null;stopwatchTimer=null;rtcActive=false;judgementArmed=false;
-  secondsElapsed=0;clearLights();message.textContent='';
-  stopwatch.textContent='00:00';readyBtn.disabled=true;
+  clearInterval(timer); clearInterval(stopwatchTimer); clearRTC();
+  timer=null; stopwatchTimer=null; rtcActive=false; judgementArmed=false; lastJudgementTime=0;
+  secondsElapsed=0; clearLights(); message.textContent=''; stopwatch.textContent='00:00';
+  readyBtn.disabled=true;
 };
 yesBtn.onclick=()=>resolveJudgement('yes');
 noBtn.onclick=()=>resolveJudgement('no');

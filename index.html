@@ -1,4 +1,3 @@
-<!-- Full corrected code -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +21,7 @@ label{font-size:.9rem;color:#cbd5f5;display:flex;align-items:center;justify-cont
 .stopwatch{text-align:center;font-size:.9rem;color:#9ca3af}
 button{width:100%;padding:12px;border-radius:999px;border:none;background:#1d4ed8;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
 button.secondary{background:#374151}
+button.secondary.active{background:#1e40af}
 button:disabled{opacity:.5;cursor:not-allowed}
 .overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:10}
 .overlay .card{background:#020617;border-radius:14px;padding:20px;width:320px;box-shadow:0 20px 40px rgba(0,0,0,.6);text-align:center}
@@ -79,7 +79,7 @@ input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 <div class="stopwatch" id="stopwatch">00:00</div>
 
 <button id="startBtn">Start</button>
-<button id="readyBtn" class="secondary" disabled>Ready Mode</button>
+<button id="readyBtn" class="secondary">Ready Mode</button>
 <button id="resetBtn" class="secondary">Reset</button>
 </div>
 
@@ -188,28 +188,36 @@ function readyMode(){
   clearInterval(timer); clearRTC();
   judgementArmed=false;
 
-  const red=5,green=15;
+  readyBtn.classList.add('active'); // show ready mode
   const lightsContainer=document.getElementById('lightsContainer');
   lightsContainer.classList.add('ready');
 
-  function rtcSet(p){
-    phase=p;
+  const red=5,green=15;
+  function rtcLoop(){
+    if(!rtcActive){lightsContainer.classList.remove('ready'); readyBtn.classList.remove('active'); return;}
+    phase = phase==='red'?'green':'red';
     clearLights();
-    document.getElementById(p).classList.add('active');
-    beep(p);
-    if(p==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
-    if(p==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
+    document.getElementById(phase).classList.add('active');
+    beep(phase);
+    if(phase==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
+    if(phase==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
+    rtcTimers.push(setTimeout(rtcLoop, phase==='red'?red*1000:green*1000));
   }
 
-  rtcSet('red');
-  rtcTimers.push(setTimeout(function cycle(){
-    if(!rtcActive) return;
-    rtcSet(phase==='red'?'green':'red');
-    rtcTimers.push(setTimeout(cycle,(phase==='green'?green:red)*1000));
-  },red*1000));
+  // start cycle
+  phase='red';
+  clearLights();
+  document.getElementById('red').classList.add('active');
+  message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
+  beep('red');
+  rtcTimers.push(setTimeout(rtcLoop, red*1000));
 
+  // verdict
   rtcTimers.push(setTimeout(()=>{
-    clearRTC(); clearLights(); lightsContainer.classList.remove('ready');
+    clearRTC();
+    clearLights();
+    lightsContainer.classList.remove('ready');
+    readyBtn.classList.remove('active');
     message.textContent='Verdict incoming...';
     rtcTimers.push(setTimeout(()=>{
       if(Math.random()<0.5){
@@ -241,6 +249,7 @@ resetBtn.onclick=()=>{
   timer=null; stopwatchTimer=null; rtcActive=false; judgementArmed=false; lastJudgementTime=0;
   secondsElapsed=0; clearLights(); message.textContent=''; stopwatch.textContent='00:00';
   readyBtn.disabled=true;
+  readyBtn.classList.remove('active');
 };
 yesBtn.onclick=()=>resolveJudgement('yes');
 noBtn.onclick=()=>resolveJudgement('no');

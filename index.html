@@ -1,71 +1,38 @@
+<!-- Full corrected code -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Red Light Green Light</title>
-
 <style>
-body{
-  font-family:system-ui,sans-serif;
-  background:#0f172a;
-  color:#e5e7eb;
-  display:flex;
-  justify-content:center;
-  padding:20px;
-}
-.panel{
-  background:#020617;
-  padding:20px;
-  border-radius:14px;
-  width:380px;
-  max-width:95vw;
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
-}
+body{font-family:system-ui,sans-serif;background:#0f172a;color:#e5e7eb;display:flex;justify-content:center;padding:20px;}
+.panel{background:#020617;padding:20px;border-radius:14px;width:380px;max-width:95vw;box-shadow:0 20px 40px rgba(0,0,0,.6);}
 h1{text-align:center;margin-top:0}
 .section{margin-bottom:16px}
 label{font-size:.9rem;color:#cbd5f5;display:flex;align-items:center;justify-content:space-between}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.lights{display:flex;justify-content:space-around;margin:18px 0 10px}
-.light{
-  width:80px;height:80px;border-radius:50%;
-  background:#1f2937;opacity:.25;transition:.3s
-}
+.lights{display:flex;justify-content:space-around;margin:18px 0 10px;padding:5px;border-radius:12px;transition:.3s;}
+.lights.ready{background:#1e40af;}
+.light{width:80px;height:80px;border-radius:50%;background:#1f2937;opacity:.25;transition:.3s}
 .light.red.active{background:#ef4444;opacity:1;box-shadow:0 0 25px rgba(239,68,68,.8)}
 .light.green.active{background:#22c55e;opacity:1;box-shadow:0 0 25px rgba(34,197,94,.8)}
 .light.amber.active{background:#f59e0b;opacity:1;box-shadow:0 0 25px rgba(245,158,11,.9)}
-.light.ready.active{background:#3b82f6;opacity:1;box-shadow:0 0 25px rgba(59,130,246,.8);}
 #message{text-align:center;min-height:48px;font-size:1.1rem;font-weight:600;margin-bottom:10px}
 .stopwatch{text-align:center;font-size:.9rem;color:#9ca3af}
-button{
-  width:100%;padding:12px;border-radius:999px;border:none;
-  background:#1d4ed8;color:#fff;font-size:1rem;font-weight:600;
-  cursor:pointer;margin-top:10px
-}
+button{width:100%;padding:12px;border-radius:999px;border:none;background:#1d4ed8;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
 button.secondary{background:#374151}
 button:disabled{opacity:.5;cursor:not-allowed}
-.overlay{
-  position:fixed;inset:0;background:rgba(2,6,23,.92);
-  display:none;align-items:center;justify-content:center;z-index:10
-}
-.overlay .card{
-  background:#020617;border-radius:14px;padding:20px;
-  width:320px;box-shadow:0 20px 40px rgba(0,0,0,.6);
-  text-align:center
-}
+.overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);display:none;align-items:center;justify-content:center;z-index:10}
+.overlay .card{background:#020617;border-radius:14px;padding:20px;width:320px;box-shadow:0 20px 40px rgba(0,0,0,.6);text-align:center}
 .overlay .q{font-size:1.05rem;margin-bottom:14px}
 .overlay .btns{display:flex;gap:10px}
-input[type="checkbox"].toggle{
-  width:50px;height:26px;position:relative;-webkit-appearance:none;background:#374151;outline:none;border-radius:13px;transition:.3s;cursor:pointer;
-}
+input[type="checkbox"].toggle{width:50px;height:26px;position:relative;-webkit-appearance:none;background:#374151;outline:none;border-radius:13px;transition:.3s;cursor:pointer;}
 input[type="checkbox"].toggle:checked{background:#1d4ed8;}
-input[type="checkbox"].toggle:before{
-  content:"";position:absolute;width:22px;height:22px;border-radius:50%;top:2px;left:2px;background:#fff;transition:.3s;
-}
+input[type="checkbox"].toggle:before{content:"";position:absolute;width:22px;height:22px;border-radius:50%;top:2px;left:2px;background:#fff;transition:.3s;}
 input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 </style>
 </head>
-
 <body>
 <div class="panel">
 <h1>Red Light Green Light</h1>
@@ -102,7 +69,7 @@ input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 <label>Enable Judgement Questions <input type="checkbox" id="judgementToggle" class="toggle" checked></label>
 </div>
 
-<div class="lights">
+<div class="lights" id="lightsContainer">
 <div id="red" class="light red"></div>
 <div id="amber" class="light amber"></div>
 <div id="green" class="light green"></div>
@@ -127,7 +94,6 @@ input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 </div>
 
 <script>
-/* ===== AUDIO ===== */
 let audioCtx;
 function initAudio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}}
 function tone(freq,d=0.25,g=0.25){const o=audioCtx.createOscillator();const ga=audioCtx.createGain();o.connect(ga).connect(audioCtx.destination);o.frequency.value=freq;ga.gain.value=g;o.start();o.stop(audioCtx.currentTime+d);}
@@ -139,7 +105,6 @@ function beep(type){
   if(type==='cum'){tone(1200,0.2);setTimeout(()=>tone(1000,0.25),250);}
 }
 
-/* ===== TEXT ===== */
 const authorityRed=['Hands off your cock','No touching','Hands off','Discipline required','No you dont'];
 const greenTexts=['Fuck youself','Jerk jerk jerk','Jerk that cock','Up and down, up and down','Jerk it'];
 const punishments=['Show your desperation','Fling your cock around','Hump the air','Present for inspection','Hips in the air'];
@@ -152,7 +117,6 @@ const judgementQuestions=[
 {q:'Do you like being watched?',yesPunish:0.6,noPunish:0.4}
 ];
 
-/* ===== CORE LOGIC ===== */
 let phase=null,timer=null,stopwatchTimer=null,timeLeft=0,secondsElapsed=0;
 let rtcActive=false,rtcTimers=[],judgementArmed=false,lastJudgementTime=0;
 
@@ -173,7 +137,7 @@ function tick(){timeLeft--;if(timeLeft<=0)nextPhase();}
 
 function maybeJudgement(){
   if(!judgementToggle.checked || !judgementArmed) return false;
-  if(secondsElapsed - lastJudgementTime >= 120){ // every 2 minutes
+  if(secondsElapsed - lastJudgementTime >= 120){
     triggerJudgement();
     lastJudgementTime = secondsElapsed;
     return true;
@@ -198,7 +162,6 @@ function startStopwatch(){
   },1000);
 }
 
-/* ===== JUDGEMENT ===== */
 function triggerJudgement(){
   clearInterval(timer);
   clearLights();
@@ -226,11 +189,13 @@ function readyMode(){
   judgementArmed=false;
 
   const red=5,green=15;
+  const lightsContainer=document.getElementById('lightsContainer');
+  lightsContainer.classList.add('ready');
 
   function rtcSet(p){
-    phase=p; clearLights();
-    if(rtcActive) document.getElementById(p).classList.add(p==='red'?'red':'green');
-    if(rtcActive) document.querySelector('.lights').classList.add('ready');
+    phase=p;
+    clearLights();
+    document.getElementById(p).classList.add('active');
     beep(p);
     if(p==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
     if(p==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
@@ -244,7 +209,7 @@ function readyMode(){
   },red*1000));
 
   rtcTimers.push(setTimeout(()=>{
-    clearRTC(); clearLights(); document.querySelector('.lights').classList.remove('ready');
+    clearRTC(); clearLights(); lightsContainer.classList.remove('ready');
     message.textContent='Verdict incoming...';
     rtcTimers.push(setTimeout(()=>{
       if(Math.random()<0.5){

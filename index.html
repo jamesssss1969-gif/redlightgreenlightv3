@@ -18,6 +18,7 @@ label{font-size:.9rem;color:#cbd5f5;display:flex;align-items:center;justify-cont
 .light.green.active{background:#22c55e;opacity:1;box-shadow:0 0 25px rgba(34,197,94,.8)}
 .light.amber.active{background:#f59e0b;opacity:1;box-shadow:0 0 25px rgba(245,158,11,.9)}
 #message{text-align:center;min-height:48px;font-size:1.1rem;font-weight:600;margin-bottom:10px}
+#countdown{text-align:center;font-size:1rem;color:#60a5fa;margin-bottom:8px;}
 .stopwatch{text-align:center;font-size:.9rem;color:#9ca3af}
 button{width:100%;padding:12px;border-radius:999px;border:none;background:#1d4ed8;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;margin-top:10px}
 button.secondary{background:#374151}
@@ -69,6 +70,8 @@ input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 <label>Enable Judgement Questions <input type="checkbox" id="judgementToggle" class="toggle" checked></label>
 </div>
 
+<div id="countdown"></div>
+
 <div class="lights" id="lightsContainer">
 <div id="red" class="light red"></div>
 <div id="amber" class="light amber"></div>
@@ -94,6 +97,7 @@ input[type="checkbox"].toggle:checked:before{transform:translateX(24px);}
 </div>
 
 <script>
+/* AUDIO */
 let audioCtx;
 function initAudio(){if(!audioCtx){audioCtx=new (window.AudioContext||window.webkitAudioContext)();}}
 function tone(freq,d=0.25,g=0.25){const o=audioCtx.createOscillator();const ga=audioCtx.createGain();o.connect(ga).connect(audioCtx.destination);o.frequency.value=freq;ga.gain.value=g;o.start();o.stop(audioCtx.currentTime+d);}
@@ -105,10 +109,10 @@ function beep(type){
   if(type==='cum'){tone(1200,0.2);setTimeout(()=>tone(1000,0.25),250);}
 }
 
+/* TEXT */
 const authorityRed=['Hands off your cock','No touching','Hands off','Discipline required','No you dont'];
 const greenTexts=['Fuck youself','Jerk jerk jerk','Jerk that cock','Up and down, up and down','Jerk it'];
 const punishments=['Show your desperation','Fling your cock around','Hump the air','Present for inspection','Hips in the air'];
-
 const judgementQuestions=[
 {q:'Have you followed the rules?',yesPunish:0.2,noPunish:0.8},
 {q:'Have you been perving?',yesPunish:0.7,noPunish:0.3},
@@ -117,6 +121,7 @@ const judgementQuestions=[
 {q:'Do you like being watched?',yesPunish:0.6,noPunish:0.4}
 ];
 
+/* CORE LOGIC */
 let phase=null,timer=null,stopwatchTimer=null,timeLeft=0,secondsElapsed=0;
 let rtcActive=false,rtcTimers=[],judgementArmed=false,lastJudgementTime=0;
 
@@ -162,6 +167,7 @@ function startStopwatch(){
   },1000);
 }
 
+/* JUDGEMENT */
 function triggerJudgement(){
   clearInterval(timer);
   clearLights();
@@ -179,7 +185,7 @@ function resolveJudgement(ans){
   timer=setInterval(tick,1000);
 }
 
-/* ===== READY TO CUM ===== */
+/* READY TO CUM MODE WITH COUNTDOWN */
 function clearRTC(){rtcTimers.forEach(t=>clearTimeout(t));rtcTimers=[];}
 function readyMode(){
   initAudio();
@@ -188,20 +194,23 @@ function readyMode(){
   clearInterval(timer); clearRTC();
   judgementArmed=false;
 
-  readyBtn.classList.add('active'); // show ready mode
+  readyBtn.classList.add('active'); 
   const lightsContainer=document.getElementById('lightsContainer');
   lightsContainer.classList.add('ready');
+  const countdownDisplay=document.getElementById('countdown');
+  let verdictCountdown=60; // seconds until verdict
+  countdownDisplay.textContent = `Verdict in: ${verdictCountdown}s`;
 
-  const red=5,green=15;
+  const redDur=5,greenDur=15;
   function rtcLoop(){
-    if(!rtcActive){lightsContainer.classList.remove('ready'); readyBtn.classList.remove('active'); return;}
+    if(!rtcActive){lightsContainer.classList.remove('ready'); readyBtn.classList.remove('active'); countdownDisplay.textContent=''; return;}
     phase = phase==='red'?'green':'red';
     clearLights();
     document.getElementById(phase).classList.add('active');
     beep(phase);
     if(phase==='red') message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
     if(phase==='green') message.textContent=greenTexts[Math.floor(Math.random()*greenTexts.length)];
-    rtcTimers.push(setTimeout(rtcLoop, phase==='red'?red*1000:green*1000));
+    rtcTimers.push(setTimeout(rtcLoop, phase==='red'?redDur*1000:greenDur*1000));
   }
 
   // start cycle
@@ -210,7 +219,14 @@ function readyMode(){
   document.getElementById('red').classList.add('active');
   message.textContent=authorityRed[Math.floor(Math.random()*authorityRed.length)];
   beep('red');
-  rtcTimers.push(setTimeout(rtcLoop, red*1000));
+  rtcTimers.push(setTimeout(rtcLoop, redDur*1000));
+
+  // countdown timer for verdict
+  let countdownInterval = setInterval(()=>{
+    verdictCountdown--;
+    countdownDisplay.textContent = `Verdict in: ${verdictCountdown}s`;
+    if(verdictCountdown<=0){clearInterval(countdownInterval);}
+  },1000);
 
   // verdict
   rtcTimers.push(setTimeout(()=>{
@@ -218,6 +234,7 @@ function readyMode(){
     clearLights();
     lightsContainer.classList.remove('ready');
     readyBtn.classList.remove('active');
+    countdownDisplay.textContent='';
     message.textContent='Verdict incoming...';
     rtcTimers.push(setTimeout(()=>{
       if(Math.random()<0.5){
@@ -231,10 +248,10 @@ function readyMode(){
         readyMode();
       }
     },2500));
-  },60000));
+  },verdictCountdown*1000));
 }
 
-/* ===== EVENTS ===== */
+/* EVENTS */
 startBtn.onclick=()=>{
   initAudio();
   if(timer) return;
@@ -247,7 +264,7 @@ readyBtn.onclick=readyMode;
 resetBtn.onclick=()=>{
   clearInterval(timer); clearInterval(stopwatchTimer); clearRTC();
   timer=null; stopwatchTimer=null; rtcActive=false; judgementArmed=false; lastJudgementTime=0;
-  secondsElapsed=0; clearLights(); message.textContent=''; stopwatch.textContent='00:00';
+  secondsElapsed=0; clearLights(); message.textContent=''; document.getElementById('countdown').textContent='';
   readyBtn.disabled=true;
   readyBtn.classList.remove('active');
 };
